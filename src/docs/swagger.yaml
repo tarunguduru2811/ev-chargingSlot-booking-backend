@@ -5,7 +5,7 @@ info:
   description: API documentation for EV Charging Slot Booking System
 
 servers:
-  - url: http://localhost:5000
+  - url: http://localhost:5000/api
 
 paths:
   /:
@@ -14,3 +14,41 @@ paths:
       responses:
         200:
           description: Server is running
+
+  /auth/register:
+    post:
+      summary: Register user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        201:
+          description: User created
+
+  /auth/login:
+    post:
+      summary: Login user
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: string
+                  password:
+                    type: string
+      responses:
+        200:
+          description: Login successful
