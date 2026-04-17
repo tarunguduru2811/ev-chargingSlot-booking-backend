@@ -1,0 +1,143 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider   = "prisma-client-js"
+  output     = "../src/generated"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  STATION_ADMIN
+  SUPER_ADMIN
+}
+
+enum BookingStatus {
+  BOOKED
+  CANCELLED
+  COMPLETED
+}
+
+enum SlotStatus {
+  AVAILABLE
+  BOOKED
+  BLOCKED
+}
+
+//USER
+model User {
+  id String @id @default(uuid())
+
+  name     String
+  email    String @unique
+  password String
+
+  role Role @default(USER)
+
+  phone    String?
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings Booking[]
+  stations ChargingStation[] @relation("StationAdmin")
+
+  refreshTokens RefreshToken[]
+
+  @@index([email])
+}
+
+//CHARGING STATION
+model ChargingStation {
+  id String @id @default(uuid())
+
+  name    String
+  address String
+
+  latitude  Float
+  longitude Float
+
+  adminId String
+  admin   User   @relation("StationAdmin", fields: [adminId], references: [id])
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  slots ChargingSlot[]
+
+  @@index([adminId])
+  @@index([latitude, longitude])
+}
+
+model ChargingSlot {
+  id String @id @default(uuid())
+
+  stationId String
+  station   ChargingStation @relation(fields: [stationId], references: [id])
+
+  startTime DateTime
+  endTime   DateTime
+
+  status  SlotStatus @default(AVAILABLE)
+  //Concurrency
+  version Int        @default(0)
+
+  price     Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings Booking[]
+
+  @@index([stationId, startTime])
+  @@index([status])
+}
+
+model Booking {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  slotId String
+  slot   ChargingSlot @relation(fields: [slotId], references: [id])
+
+  status BookingStatus @default(BOOKED)
+
+  startTime DateTime
+  endTime   DateTime
+
+  amount        Float?
+  paymentStatus String?
+
+  cancelledAt DateTime?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([slotId])
+  @@index([status])
+}
+
+model RefreshToken {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  token     String
+  expiresAt DateTime
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
