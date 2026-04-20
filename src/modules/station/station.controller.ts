@@ -1,5 +1,5 @@
 import { Request,Response } from "express";
-import { createStation, getAllStations, getStationById, updateStation } from "./station.service";
+import { createStation, deleteStation, getAllStations, getStationById, updateStation } from "./station.service";
 
 
 export const createStationController = async(req:Request,res:Response) => {
@@ -53,6 +53,19 @@ export const updateStationController = async (req:Request,res:Response) => {
         res.json(updated)
     }catch(err:any){
         res.status(400).json({
+            error:err.message
+        })
+    }
+}
+
+export const deleteStationController = async (req:Request,res:Response) => {
+    try{
+            const updated = await deleteStation(req.params.id as string);
+            res.json({
+                message:"Station deleted successfully"
+            })
+    }catch(err:any){
+        return res.status(400).json({
             error:err.message
         })
     }

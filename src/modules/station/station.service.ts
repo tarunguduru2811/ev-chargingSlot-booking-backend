@@ -5,6 +5,24 @@ import prisma from "../../config/prisma";
 export const createStation = async (data:any) => {
     const {name,address,latitude,longitude,adminId} = data;
 
+    const user = await prisma.user.findUnique({
+        where:{
+            id:adminId
+        }
+    })
+
+    if(!user){
+        throw new Error("No User Found");
+    }
+
+    await prisma.user.update({
+        where:{id:adminId},
+        data:{
+            role:"STATION_ADMIN"
+        }
+    })
+    console.log("Role Updated Successfully...");
+
     return prisma.chargingStation.create({
         data:{
             name,
@@ -46,5 +64,11 @@ export const updateStation = async (id:string,data:any) => {
     return prisma.chargingStation.update({
         where:{id},
         data
+    })
+}
+
+export const deleteStation = async(id:string) => {
+    return prisma.chargingStation.delete({
+        where:{id}
     })
 }

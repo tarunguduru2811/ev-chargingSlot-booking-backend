@@ -4,6 +4,7 @@ import {
   getStationsController,
   getStationController,
   updateStationController,
+  deleteStationController,
 } from "./station.controller";
 import { authMiddleWare, authorize } from "../../middlewares/auth.middleware";
 
@@ -135,8 +136,39 @@ router.post(
 router.put(
   "/:id",
   authMiddleWare,
-  authorize(["SUPER_ADMIN"]),
+  authorize(["SUPER_ADMIN","STATION_ADMIN"]),
   updateStationController
+);
+
+
+/**
+ * @swagger
+ * /stations/{id}:
+ *   delete:
+ *     summary: Delting a charging station (SUPER_ADMIN only)
+ *     tags: [Stations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: Station ID
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Station Deleted successfully
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Station not found
+ */
+router.delete(
+  "/:id",
+  authMiddleWare,
+  authorize(["STATION_ADMIN","SUPER_ADMIN"]),
+  deleteStationController
 );
 
 export default router;
