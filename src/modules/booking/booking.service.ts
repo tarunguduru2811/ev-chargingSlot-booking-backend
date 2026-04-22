@@ -1,4 +1,5 @@
 import prisma from "../../config/prisma";
+import { getIO } from "../../socket";
 
 
 export const createBooking = async (user:any,data:any) => {
@@ -20,11 +21,21 @@ export const createBooking = async (user:any,data:any) => {
         if(slot.startTime < now){
             throw new Error("Cannot book past slot")
         }
+        const existingBooking = await tx.booking.findFirst({
+            where:{
+                userId:user.id,
+                slotId,
+                status:"BOOKED"
+            }
+        })
 
+        if(existingBooking) throw new Error("You already booked this slot")
+        
         const updatedSlot = await tx.chargingSlot.updateMany({
             where:{
                 id:slotId,
-                status:"AVAILABLE"
+                status:"AVAILABLE",
+                version:slot.version
             },
             data:{
                 status:"BOOKED",
@@ -42,8 +53,15 @@ export const createBooking = async (user:any,data:any) => {
                 slotId:slot.id,
                 startTime:slot.startTime,
                 endTime:slot.endTime,
-                status:"BOOKED"
+                status:"BOOKED",
+                amount:slot.price || 0
             }
+        })
+
+        const io = getIO();
+        io.to(slot.stationId).emit("slot_updated",{
+            slotId:slot.id,
+            status:"BOOKED"
         })
 
         return booking;
@@ -69,6 +87,9 @@ export const cancelBooking = async(bookingId:string,user:any) => {
         const booking = await tx.booking.findUnique({
             where:{
                 id:bookingId
+            },
+            include:{
+                slot:true
             }
         })
 
@@ -94,6 +115,12 @@ export const cancelBooking = async(bookingId:string,user:any) => {
                 version:{increment:1}
             }
         })
+
+        const io = getIO();
+        io.to(booking.slot.stationId).emit("slot_updated", {
+        slotId: booking.slotId,
+        status: "AVAILABLE"
+        });
 
         return {message:"Booking Cancelled"}
     })
