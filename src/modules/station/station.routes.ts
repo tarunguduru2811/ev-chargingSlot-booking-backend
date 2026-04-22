@@ -5,17 +5,66 @@ import {
   getStationController,
   updateStationController,
   deleteStationController,
+  getNearbyStationsController,
 } from "./station.controller";
 import { authMiddleWare, authorize } from "../../middlewares/auth.middleware";
 
 const router = Router();
-
 /**
  * @swagger
  * tags:
  *   name: Stations
  *   description: Charging Station Management APIs
  */
+
+
+/**
+ * @swagger
+ * /stations/nearby:
+ *   get:
+ *     summary: Get nearby charging stations with pagination & filters
+ *     tags: [Stations]
+ *     parameters:
+ *       - name: lat
+ *         in: query
+ *         required: true
+ *         schema:
+ *           type: number
+ *       - name: lng
+ *         in: query
+ *         required: true
+ *         schema:
+ *           type: number
+ *       - name: radius
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: number
+ *           example: 5
+ *       - name: page
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: number
+ *           example: 1
+ *       - name: limit
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: number
+ *           example: 10
+ *       - name: search
+ *         in: query
+ *         required: false
+ *         schema:
+ *           type: string
+ *           example: EV Hub
+ *     responses:
+ *       200:
+ *         description: Paginated nearby stations
+ */
+router.get("/nearby",getNearbyStationsController)
+
 
 /**
  * @swagger
@@ -170,5 +219,7 @@ router.delete(
   authorize(["STATION_ADMIN","SUPER_ADMIN"]),
   deleteStationController
 );
+
+
 
 export default router;

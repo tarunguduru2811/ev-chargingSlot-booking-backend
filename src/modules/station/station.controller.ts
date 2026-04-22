@@ -1,5 +1,5 @@
 import { Request,Response } from "express";
-import { createStation, deleteStation, getAllStations, getStationById, updateStation } from "./station.service";
+import { createStation, deleteStation, getAllStations, getNearbyStations, getStationById, updateStation } from "./station.service";
 
 
 export const createStationController = async(req:Request,res:Response) => {
@@ -70,3 +70,31 @@ export const deleteStationController = async (req:Request,res:Response) => {
         })
     }
 }
+
+
+export const getNearbyStationsController = async (req: any, res: any) => {
+  try {
+    const { lat, lng, radius, page, limit, search } = req.query;
+
+    if (!lat || !lng) {
+      return res.status(400).json({
+        message: "Latitude and Longitude are required",
+      });
+    }
+
+    const result = await getNearbyStations({
+      lat: parseFloat(lat),
+      lng: parseFloat(lng),
+      radius: radius ? parseFloat(radius) : 5,
+      page: page ? parseInt(page) : 1,
+      limit: limit ? parseInt(limit) : 10,
+      search: search || "",
+    });
+    console.log("Printing Nearby station result",result)
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({
+      error: err.message,
+    });
+  }
+};
